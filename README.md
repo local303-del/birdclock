@@ -4,7 +4,7 @@ BirdClock is a touchscreen clock and field guide for the Driftless Region around
 
 ## Use
 
-Open [BirdClock on GitHub Pages](https://local303-del.github.io/birdclock/). Tap the full-screen button to fill the display. Swipe or use the arrow buttons to change birds. Use the photo button to cycle within the current gallery, and Pause to stop both automatic rotations. Explore supports search and seasonal filtering.
+Open [BirdClock on GitHub Pages](https://local303-del.github.io/birdclock/). Tap the full-screen button to fill the display. Swipe or use the arrow buttons to change birds. Use the photo button to cycle within the current gallery, and Pause to stop both automatic rotations. Explore supports search and seasonal filtering. Use Show full photo or Fill screen in the header to change photo fit.
 
 Settings remember the rotation interval, seasonal selection, 12/24-hour format, photo fit and brightness in local storage. The clock uses the device's local date, time zone and daylight-saving rules. A correction saved by an older package is ignored.
 
