@@ -16,9 +16,30 @@ function clock(){const d=new Date();let h=d.getHours();const m=String(d.getMinut
 function showToast(s){$('status').textContent=s;$('status').style.display='block';setTimeout(()=>$('status').style.display='none',2500)}
 function eligible(){if(settings.selection==='all')return birds.map((_,i)=>i);const month=new Date().getMonth();const season=month===11||month<2?'winter':month<5?'spring':month<8?'summer':'fall';const matched=birds.map((b,i)=>({b,i})).filter(x=>x.b.seasons.includes(season)).map(x=>x.i);return matched.length?matched:birds.map((_,i)=>i)}
 function step(delta){const list=eligible();let pos=list.indexOf(index);if(pos<0)pos=0;index=list[(pos+delta+list.length)%list.length];render();resetTimer()}
-function randomNext(){const list=eligible();let n=index;for(let i=0;i<8&&n===index;i++)n=list[Math.floor(Math.random()*list.length)];index=n;render()}
+let rotationPool = '';
+const shownSpecies = new Set();
+
+function randomNext() {
+  const list = eligible();
+  const pool = list.join(',');
+  if (pool !== rotationPool) {
+    rotationPool = pool;
+    shownSpecies.clear();
+    shownSpecies.add(index);
+  }
+
+  let remaining = list.filter(species => !shownSpecies.has(species));
+  if (!remaining.length) {
+    shownSpecies.clear();
+    remaining = list.filter(species => species !== index);
+  }
+
+  if (!remaining.length) return;
+  index = remaining[Math.floor(Math.random() * remaining.length)];
+  render();
+}
 function resetTimer(){clearInterval(timer);if(!paused)timer=setInterval(randomNext,Number(settings.interval))}
-function render(){const b=birds[index];$('birdname').textContent=b.name;$('latin').textContent=b.latin;$('fact').textContent=b.fact;$('season').textContent=b.seasons.map(x=>x[0].toUpperCase()+x.slice(1)).join(' · ');$('habitat').textContent=b.habitat;$('rarity').textContent=b.rarity;$('eyebrow').textContent='Birds of the Upper Mississippi · '+String(index+1).padStart(3,'0')+'/'+birds.length;loadGallery(b)}
+function render(){shownSpecies.add(index);const b=birds[index];$('birdname').textContent=b.name;$('latin').textContent=b.latin;$('fact').textContent=b.fact;$('season').textContent=b.seasons.map(x=>x[0].toUpperCase()+x.slice(1)).join(' · ');$('habitat').textContent=b.habitat;$('rarity').textContent=b.rarity;$('eyebrow').textContent='Birds of the Upper Mississippi · '+String(index+1).padStart(3,'0')+'/'+birds.length;loadGallery(b)}
 $('nextPhoto').onclick=advancePhoto;
 $('prev').onclick=()=>step(-1);$('next').onclick=()=>step(1);$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'▶':'Ⅱ';resetTimer();resetPhotoTimer()};$('fullscreen').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();$('browseBtn').onclick=()=>{$('browse').showModal();listBirds()};$('settingsBtn').onclick=()=>$('settings').showModal();
 function applyPhotoSettings() {

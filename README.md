@@ -12,7 +12,7 @@ Settings remember the rotation interval, seasonal selection, 12/24-hour format, 
 
 - `index.html` contains the display, controls, settings and bird rotation.
 - `birds.js` holds the original 220 records. `make_birds.py` is the original data-generation tool.
-- `gallery.js` searches Wikimedia Commons by common and scientific names, then filters for landscape JPEGs at least 1000 pixels wide with recognized license metadata. It selects up to six photos, prioritizing proportions close to the landscape display. Some species have fewer or no matching photos. The default bird interval is 45 seconds and the photo interval is 12 seconds.
+- `gallery.js` searches Wikimedia Commons by common and scientific names, then filters for landscape JPEGs at least 1000 pixels wide with recognized license metadata. It selects up to six photos, prioritizing proportions close to the landscape display. Some species have fewer or no matching photos. The default bird interval is 45 seconds and the photo interval is 12 seconds. Automatic bird rotation draws from the eligible species without replacement until the pool is exhausted.
 - `sw.js` caches the static app for offline use after the first successful visit. New gallery lookups require internet access.
 - `Start-BirdClock.bat` and `serve.ps1` are the original optional Windows local preview launcher. The hosted app requires no Python, local server, build step or API key.
 
