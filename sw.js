@@ -1,4 +1,4 @@
-const CACHE = 'birdclock-static-v1';
+const CACHE = 'birdclock-static-v2';
 const shell = ['./', 'index.html', 'birds.js', 'gallery.js', 'manifest.webmanifest'];
 const shellUrls = new Set(shell.map(path => new URL(path, self.registration.scope).href));
 
@@ -9,7 +9,8 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(Promise.all([
     self.clients.claim(),
-    caches.delete('birdclock-v2')
+    caches.delete('birdclock-v2'),
+    caches.delete('birdclock-static-v1')
   ]));
 });
 
