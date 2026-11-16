@@ -163,20 +163,60 @@ function clearGallery() {
   $('credit').textContent = '';
 }
 
-async function loadGallery(bird) {
-  clearGallery();
-  if (settings.photosHidden) return;
+function decodePhoto(photo, signal) {
+  return new Promise(resolve => {
+    const image = new Image();
+    const finish = loaded => {
+      clearTimeout(timeout);
+      signal.removeEventListener('abort', cancel);
+      image.onload = image.onerror = null;
+      if (!loaded) image.removeAttribute('src');
+      resolve(loaded);
+    };
+    const cancel = () => finish(false);
+    const timeout = setTimeout(cancel, 3500);
+    signal.addEventListener('abort', cancel, {once: true});
+    image.onload = () => finish(true);
+    image.onerror = cancel;
+    image.src = photo.url;
+  });
+}
+
+async function loadGallery(bird, publishBird) {
+  clearTimeout(photoTimer);
+  photoRequest?.abort();
+  const token = ++photoToken;
+  $('nextPhoto').disabled = true;
+  if (settings.photosHidden) {
+    clearGallery();
+    publishBird();
+    return;
+  }
+
   photoRequest = new AbortController();
-  const signal = photoRequest.signal;
-  const token = photoToken;
-  $('credit').textContent = 'Looking for bird photographs…';
+  const {signal} = photoRequest;
+  const primary = vettedPhotos[bird.name];
+  const ready = primary && await decodePhoto(primary, signal);
+  if (token !== photoToken) return;
+
+  gallery = [];
+  photoIndex = 0;
+  publishBird();
+  if (ready) {
+    gallery.push(primary);
+    displayPhoto(primary);
+  } else {
+    photoUnavailable();
+  }
+
   try {
     const photos = await findPhotos(bird, signal);
     if (token !== photoToken) return;
-    gallery = [...photos];
-    showPhoto();
+    gallery.push(...photos);
+    if (ready) displayPhoto(primary);
+    else if (gallery.length) showPhoto();
   } catch {
-    if (token === photoToken) photoUnavailable();
+    // The bundled photo remains available if Commons fails or is offline.
   }
 }
 
@@ -188,36 +228,38 @@ function resetPhotoTimer() {
 }
 
 function advancePhoto() {
-  if (gallery.length < 2) return;
+  if (gallery.length < 2 || $('nextPhoto').disabled) return;
   photoIndex = (photoIndex + 1) % Math.min(6, gallery.length);
   showPhoto();
 }
 
-function showPhoto() {
+function displayPhoto(photo) {
+  $('photo').style.backgroundImage = 'url(' + JSON.stringify(photo.url) + ')';
+  $('credit').replaceChildren(
+    (photoIndex + 1) + '/' + Math.min(6, gallery.length) + ' · ',
+    creditLink(photo.title || 'Photo', photo.source), ' · ',
+    photo.author ? photo.author + ' · ' : '',
+    photo.licenseUrl ? creditLink(photo.license, photo.licenseUrl) : photo.license,
+    (photo.observation ? ' · iNaturalist' : ' · Wikimedia Commons') +
+      (photo.url.startsWith('photos/') ? ' · resized' : '')
+  );
+  $('nextPhoto').disabled = gallery.length < 2;
+  resetPhotoTimer();
+}
+
+async function showPhoto() {
   if (!gallery.length) return photoUnavailable();
   clearTimeout(photoTimer);
   $('nextPhoto').disabled = true;
   const token = ++photoToken;
   const photo = gallery[photoIndex];
-  const image = new Image();
-  image.onload = () => {
-    if (token !== photoToken) return;
-    $('photo').style.backgroundImage = 'url(' + JSON.stringify(photo.url) + ')';
-    $('credit').replaceChildren(
-      (photoIndex + 1) + '/' + Math.min(6, gallery.length) + ' · ',
-      creditLink(photo.title, photo.source), ' · ',
-      photo.author ? photo.author + ' · ' : '',
-      photo.licenseUrl ? creditLink(photo.license, photo.licenseUrl) : photo.license,
-      ' · Wikimedia Commons'
-    );
-    $('nextPhoto').disabled = gallery.length < 2;
-    resetPhotoTimer();
-  };
-  image.onerror = () => {
-    if (token !== photoToken) return;
+  const ready = await decodePhoto(photo, photoRequest.signal);
+  if (token !== photoToken) return;
+  if (ready) {
+    displayPhoto(photo);
+  } else {
     gallery.splice(photoIndex, 1);
     photoIndex = gallery.length ? photoIndex % Math.min(6, gallery.length) : 0;
     showPhoto();
-  };
-  image.src = photo.url;
+  }
 }
