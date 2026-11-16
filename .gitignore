@@ -5,8 +5,8 @@ Thumbs.db
 *.zip
 .env
 .env.*
-/photos/
 *.jpg
 *.jpeg
 *.png
 *.webp
+!/photos/*.jpg
